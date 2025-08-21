@@ -40,9 +40,7 @@ uploaded_file = st.file_uploader(
 
 
 
-def reset_app():
-    st.session_state.image_confirmee = False
-    st.session_state.uploaded_file = None
+
 
 if uploaded_file is not None and not st.session_state.image_confirmee:
     image = Image.open(uploaded_file).convert("RGB")
