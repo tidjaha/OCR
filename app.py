@@ -20,7 +20,7 @@ st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre d
 
 
 # Zone vide pour tout le bloc upload + confirmation
-placeholder = st.empty()
+#placeholder = st.empty()
 
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
