@@ -17,12 +17,15 @@ ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
 
 uploaded_file = st.file_uploader("Choisis une image à analyser (détection de texte) :", type=["jpg", "jpeg", "png"])
+def reset_app():
+    st.session_state.image_confirmee = False
+    st.session_state.uploaded_file = None
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Image importée", use_column_width=True)
     confirmation = st.radio("C'est bien votre image ?", ("Oui", "Non"))
-    if confirmation == "Oui":
+    if st.button("Oui"):
                 img_array = np.array(image)
             
                 # -----------------------------
@@ -127,6 +130,7 @@ if uploaded_file is not None:
                         file_name="ocr_result.txt",
                         mime="text/plain",
                     )
-    else:
-        st.warning("Action annulée. Vous pouvez charger une autre image.")
+    if st.button("Non"):
+        reset_app()
+        st.experimental_rerun()  
 
