@@ -29,10 +29,11 @@ if "uploaded_file" not in st.session_state:
     st.session_state.uploaded_file = None
 
 # Fonction reset
+
 def reset_app():
-    st.session_state.image_confirmee = False
     st.session_state.uploaded_file = None
-    placeholder.empty()  # supprime tout le contenu affiché dans ce bloc
+    st.session_state.image_confirmee = False
+    placeholder.empty()
 
 with placeholder.container():
     uploaded_file = st.file_uploader(
@@ -156,8 +157,8 @@ with placeholder.container():
                     )
         with col2:
             if st.button("Non"):
-                st.session_state.reset_page = True  # Indique qu'on veut reset
-                st.experimental_rerun()
+                reset_app()
+                
 
 
 
