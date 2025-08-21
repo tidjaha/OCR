@@ -84,7 +84,7 @@ if uploaded_file is not None:
             buffer.seek(0)  # remettre le curseur au début du buffer
             
             # utiliser dans doctr
-            doc = DocumentFile.from_images(buffer)
+            doc = DocumentFile.from_images(buffer.getvalue())
             
             # afficher dans Streamlit
             st.image(crop_pil, caption="Aperçu du crop", use_container_width=True)
