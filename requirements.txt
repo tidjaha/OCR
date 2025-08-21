@@ -1,9 +1,8 @@
-
 streamlit
-ultralytics
 torch
 torchvision
+ultralytics
+python-doctr
 opencv-python-headless
 numpy
 Pillow
-python-doctr[torch]
