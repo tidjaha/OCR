@@ -72,15 +72,24 @@ if uploaded_file is not None:
         # -----------------------------
         recognized_text = []
         for idx, (x1, y1, x2, y2, conf) in enumerate(boxes_sorted, start=1):
+            # ton crop numpy
             crop = img_array[y1:y2, x1:x2]
+            
+            # conversion en image PIL
             crop_pil = Image.fromarray(crop)
+            
+            # sauvegarde en mémoire (buffer) au format JPEG
+            buffer = io.BytesIO()
+            crop_pil.save(buffer, format="JPEG")
+            buffer.seek(0)  # remettre le curseur au début du buffer
+            
+            # utiliser dans doctr
+            doc = DocumentFile.from_images(buffer)
+            
+            # afficher dans Streamlit
+            st.image(crop_pil, caption="Aperçu du crop", use_container_width=True)
 
             
-            
-            # Passage à Doctr
-            #doc = DocumentFile.from_images([buffer])
-           # crop_pil = Image.fromarray(crop)
-            doc = DocumentFile.from_images([crop_pil])
             img = doc[0].astype("float32") / 255.0
 
             h, w, _ = img.shape
