@@ -74,14 +74,13 @@ if uploaded_file is not None:
         for idx, (x1, y1, x2, y2, conf) in enumerate(boxes_sorted, start=1):
             crop = img_array[y1:y2, x1:x2]
             crop_pil = Image.fromarray(crop)
-            buffer = io.BytesIO()
-            crop_pil.save(buffer, format="PNG")
-            buffer.seek(0)
+
+            
             
             # Passage à Doctr
-            doc = DocumentFile.from_images([buffer])
+            #doc = DocumentFile.from_images([buffer])
            # crop_pil = Image.fromarray(crop)
-           # doc = DocumentFile.from_images([crop_pil])
+            doc = DocumentFile.from_images([crop_pil])
             img = doc[0].astype("float32") / 255.0
 
             h, w, _ = img.shape
