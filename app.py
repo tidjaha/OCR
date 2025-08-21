@@ -22,33 +22,30 @@ st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre d
 # Zone vide pour tout le bloc upload + confirmation
 placeholder = st.empty()
 
-# État de confirmation
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
-if "uploaded_file" not in st.session_state:
-    st.session_state.uploaded_file = None  # le fichier actuel
-if "uploaded_file_key" not in st.session_state:
-    st.session_state.uploaded_file_key = 0  # la key dynamique
-# Fonction reset
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
 
-def reset_app():
-    st.session_state.uploaded_file = None
-    st.session_state.uploaded_file_key += 1  # force le file_uploader à se réinitialiser
-    st.session_state.image_confirmee = False
-    placeholder.empty()
-
-with placeholder.container():
-    uploaded_file = st.file_uploader(
+# File uploader toujours en dehors du placeholder
+uploaded_file = st.file_uploader(
     "Choisis une image à analyser",
     type=["png", "jpg", "jpeg"],
-    key=f"uploader_{st.session_state.uploaded_file_key}"
+    key=f"uploader_{st.session_state.uploader_key}"
 )
 
-    if uploaded_file is not None:
-        st.session_state.uploaded_file = uploaded_file
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Image importée", use_column_width=True)    
-        st.write("C'est bien votre image ?", ("Oui", "Non"))
+# Placeholder pour tout le bloc de traitement
+placeholder = st.empty()
+
+def reset_app():
+    st.session_state.image_confirmee = False
+    st.session_state.uploader_key += 1  # recrée le uploader
+    placeholder.empty()
+
+if uploaded_file is not None:
+    image = Image.open(uploaded_file)
+    with placeholder.container():
+        st.image(image, caption="Image importée", use_column_width=True)
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Oui"):
