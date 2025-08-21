@@ -19,6 +19,9 @@ st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre d
 
 
 
+# Zone vide pour tout le bloc upload + confirmation
+placeholder = st.empty()
+
 # État de confirmation
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
@@ -29,21 +32,18 @@ if "uploaded_file" not in st.session_state:
 def reset_app():
     st.session_state.image_confirmee = False
     st.session_state.uploaded_file = None
+    placeholder.empty()  # supprime tout le contenu affiché dans ce bloc
 
-# File uploader
-uploaded_file = st.file_uploader(
-    "Choisis une image à analyser",
-    type=["png", "jpg", "jpeg"]
-)
+with placeholder.container():
+    uploaded_file = st.file_uploader(
+        "Choisis une image à analyser",
+        type=["png", "jpg", "jpeg"]
+    )
 
-if uploaded_file is not None:
-    st.session_state.uploaded_file = uploaded_file
-
-# Bloc principal conditionné
-if st.session_state.uploaded_file is not None and not st.session_state.image_confirmee:
-    image = Image.open(st.session_state.uploaded_file)
-    st.image(image, caption="Image importée", use_column_width=True)
-    st.write("C'est bien votre image ?", ("Oui", "Non"))
+    if uploaded_file is not None:
+        st.session_state.uploaded_file = uploaded_file
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Image importée", use_column_width=True)    st.write("C'est bien votre image ?", ("Oui", "Non"))
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Oui"):
