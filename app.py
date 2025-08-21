@@ -48,6 +48,7 @@ if uploaded_file is not None and not st.session_state.image_confirmee:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Image importée", use_column_width=True)
     st.write("C'est bien votre image ?", ("Oui", "Non"))
+    col1, col2 = st.columns(2)
     with col1:
         if st.button("Oui"):
                 st.session_state.image_confirmee = True
