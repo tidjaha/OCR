@@ -46,8 +46,8 @@ with placeholder.container():
         st.image(image, caption="Image importée", use_column_width=True)    
         st.write("C'est bien votre image ?", ("Oui", "Non"))
         col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Oui"):
+        with col1:
+            if st.button("Oui"):
                 st.session_state.image_confirmee = True
                 st.success("Vous avez confirmé. On continue !")
                 img_array = np.array(image)
@@ -154,11 +154,10 @@ with placeholder.container():
                         file_name="ocr_result.txt",
                         mime="text/plain",
                     )
-    with col2:
-        if st.button("Non"):
-            st.session_state.image_confirmee = False
-            st.session_state.uploaded_file = None
-            st.experimental_rerun()
+        with col2:
+            if st.button("Non"):
+                st.session_state.reset_page = True  # Indique qu'on veut reset
+                st.experimental_rerun()
 
 
 
