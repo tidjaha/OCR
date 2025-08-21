@@ -45,7 +45,7 @@ with placeholder.container():
         image = Image.open(uploaded_file)
         st.image(image, caption="Image importée", use_column_width=True)    
         st.write("C'est bien votre image ?", ("Oui", "Non"))
-    col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
     with col1:
         if st.button("Oui"):
                 st.session_state.image_confirmee = True
@@ -156,8 +156,9 @@ with placeholder.container():
                     )
     with col2:
         if st.button("Non"):
-            reset_app()
-            st.success("Page réinitialisée. Vous pouvez importer une nouvelle image.")
+            st.session_state.image_confirmee = False
+            st.session_state.uploaded_file = None
+            st.experimental_rerun()
 
 
 
