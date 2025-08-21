@@ -156,7 +156,7 @@ if uploaded_file is not None and not st.session_state.image_confirmee:
                         file_name="ocr_result.txt",
                         mime="text/plain",
                     )
-        with col2:
+    with col2:
         if st.button("Non"):
             reset_app()
             st.success("Page réinitialisée. Vous pouvez importer une nouvelle image.")
