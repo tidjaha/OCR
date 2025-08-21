@@ -72,7 +72,7 @@ if uploaded_file is not None:
         recognized_text = []
         for idx, (x1, y1, x2, y2, conf) in enumerate(boxes_sorted, start=1):
             crop = img_array[y1:y2, x1:x2]
-            doc = DocumentFile.from_images(crop)
+            doc = DocumentFile.from_images([crop])
             img = doc[0].astype("float32") / 255.0
 
             h, w, _ = img.shape
