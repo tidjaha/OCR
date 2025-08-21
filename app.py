@@ -19,31 +19,29 @@ st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre d
 
 
 
-# Initialiser l'état
+# État de confirmation
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
-if "uploader_key" not in st.session_state:
-    st.session_state.uploader_key = 0
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
 
-# Fonction pour réinitialiser l'interface
+# Fonction reset
 def reset_app():
     st.session_state.image_confirmee = False
-    st.session_state.uploader_key += 1  # Change la key pour réinitialiser le file_uploader
+    st.session_state.uploaded_file = None
 
-#chargement de l'image
+# File uploader
 uploaded_file = st.file_uploader(
-    "Choisis une image à analyser (détection de texte) :",
-    type=["png", "jpg", "jpeg"],
-    key=f"uploader_{st.session_state.uploader_key}"
+    "Choisis une image à analyser",
+    type=["png", "jpg", "jpeg"]
 )
 
+if uploaded_file is not None:
+    st.session_state.uploaded_file = uploaded_file
 
-
-
-
-
-if uploaded_file is not None and not st.session_state.image_confirmee:
-    image = Image.open(uploaded_file).convert("RGB")
+# Bloc principal conditionné
+if st.session_state.uploaded_file is not None and not st.session_state.image_confirmee:
+    image = Image.open(st.session_state.uploaded_file)
     st.image(image, caption="Image importée", use_column_width=True)
     st.write("C'est bien votre image ?", ("Oui", "Non"))
     col1, col2 = st.columns(2)
