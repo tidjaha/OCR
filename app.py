@@ -39,9 +39,10 @@ def reset_app():
 
 with placeholder.container():
     uploaded_file = st.file_uploader(
-        "Choisis une image à analyser",
-        type=["png", "jpg", "jpeg"], key=f"uploader_{st.session_state.uploaded_file_key}"
-    )
+    "Choisis une image à analyser",
+    type=["png", "jpg", "jpeg"],
+    key=f"uploader_{st.session_state.uploaded_file_key}"
+)
 
     if uploaded_file is not None:
         st.session_state.uploaded_file = uploaded_file
