@@ -25,13 +25,15 @@ placeholder = st.empty()
 # État de confirmation
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None  # le fichier actuel
 if "uploaded_file_key" not in st.session_state:
-    st.session_state.uploaded_file_key = 0
-
+    st.session_state.uploaded_file_key = 0  # la key dynamique
 # Fonction reset
 
 def reset_app():
-    st.session_state.uploaded_file_key += 1
+    st.session_state.uploaded_file = None
+    st.session_state.uploaded_file_key += 1  # force le file_uploader à se réinitialiser
     st.session_state.image_confirmee = False
     placeholder.empty()
 
