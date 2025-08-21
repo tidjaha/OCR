@@ -73,6 +73,7 @@ if uploaded_file is not None:
         recognized_text = []
         for idx, (x1, y1, x2, y2, conf) in enumerate(boxes_sorted, start=1):
             crop = img_array[y1:y2, x1:x2]
+            crop_pil = Image.fromarray(crop)
             buffer = io.BytesIO()
             crop_pil.save(buffer, format="PNG")
             buffer.seek(0)
