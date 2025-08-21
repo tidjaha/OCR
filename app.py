@@ -8,24 +8,50 @@ from ultralytics import YOLO
 from doctr.io import DocumentFile
 from doctr.models import recognition
 
-# -----------------------------
-# Charger modèles
-# -----------------------------
+
+#chargement des modeles :
 yolo_model = YOLO("best.pt")  # ton modèle YOLO entraîné
 ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 
+#petite presentation
 st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
 
-uploaded_file = st.file_uploader("Choisis une image à analyser (détection de texte) :", type=["jpg", "jpeg", "png"])
+
+
+
+# Initialiser l'état
+if "image_confirmee" not in st.session_state:
+    st.session_state.image_confirmee = False
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = 0
+
+# Fonction pour réinitialiser l'interface
+def reset_app():
+    st.session_state.image_confirmee = False
+    st.session_state.uploader_key += 1  # Change la key pour réinitialiser le file_uploader
+
+#chargement de l'image
+uploaded_file = st.file_uploader(
+    "Choisis une image à analyser (détection de texte) :",
+    type=["png", "jpg", "jpeg"],
+    key=f"uploader_{st.session_state.uploader_key}"
+)
+
+
+
+
 def reset_app():
     st.session_state.image_confirmee = False
     st.session_state.uploaded_file = None
 
-if uploaded_file is not None:
+if uploaded_file is not None and not st.session_state.image_confirmee:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Image importée", use_column_width=True)
     st.write("C'est bien votre image ?", ("Oui", "Non"))
-    if st.button("Oui"):
+    with col1:
+        if st.button("Oui"):
+                st.session_state.image_confirmee = True
+                st.success("Vous avez confirmé. On continue !")
                 img_array = np.array(image)
             
                 # -----------------------------
@@ -130,8 +156,10 @@ if uploaded_file is not None:
                         file_name="ocr_result.txt",
                         mime="text/plain",
                     )
-    if st.button("Non"):
-        reset_app()
+        with col2:
+        if st.button("Non"):
+            reset_app()
+            st.success("Page réinitialisée. Vous pouvez importer une nouvelle image.")
 
 
 
