@@ -25,7 +25,7 @@ placeholder = st.empty()
 # État de confirmation
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
-if "uploaded_file" not in st.session_state:
+if "uploaded_file_key" not in st.session_state:
     st.session_state.uploaded_file_key = 0
 
 # Fonction reset
