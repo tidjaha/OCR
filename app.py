@@ -116,7 +116,7 @@ if uploaded_file is not None:
         # Étape 3 - Afficher texte final
         # -----------------------------
         st.subheader("📝 Texte Reconnu")
-        final_text = "".join(recognized_text)
+        final_text = " ".join(recognized_text)
         st.write(final_text)
 
         # Option téléchargement
