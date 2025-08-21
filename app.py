@@ -133,5 +133,5 @@ if uploaded_file is not None:
     if st.button("Non"):
         reset_app()
 
-st.experimental_rerun()  
+
 
