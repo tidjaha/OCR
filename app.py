@@ -24,7 +24,7 @@ def reset_app():
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert("RGB")
     st.image(image, caption="Image importée", use_column_width=True)
-    confirmation = st.radio("C'est bien votre image ?", ("Oui", "Non"))
+    st.write("C'est bien votre image ?", ("Oui", "Non"))
     if st.button("Oui"):
                 img_array = np.array(image)
             
@@ -132,5 +132,6 @@ if uploaded_file is not None:
                     )
     if st.button("Non"):
         reset_app()
-        st.experimental_rerun()  
+
+st.experimental_rerun()  
 
