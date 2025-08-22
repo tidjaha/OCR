@@ -3,7 +3,7 @@ import io
 import cv2
 import numpy as np
 from PIL import Image
-import os, glob, re, torch
+import torch
 from ultralytics import YOLO
 from doctr.io import DocumentFile
 from doctr.models import recognition
@@ -11,169 +11,167 @@ from doctr.models import recognition
 # Configuration de la page
 st.set_page_config(page_title="OCR App", layout="wide")
 
-# Configuration de la page
-st.set_page_config(page_title="OCR App", layout="wide")
+# Réinitialisation complète si nécessaire
+if "reset" not in st.session_state:
+    st.session_state.reset = False
 
-# Initialisation de l'état de session
-if "uploaded_file_key" not in st.session_state:
-    st.session_state.uploaded_file_key = 0
+if st.session_state.reset:
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.session_state.reset = False
+    st.rerun()
+
+# Initialisation des états de base
 if "uploaded_file" not in st.session_state:
     st.session_state.uploaded_file = None
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
-if "processing_done" not in st.session_state:
-    st.session_state.processing_done = False
 
 # Chargement des modèles
-yolo_model = YOLO("best.pt")
-ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
+try:
+    yolo_model = YOLO("best.pt")
+    ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
+    models_loaded = True
+except:
+    st.error("Erreur lors du chargement des modèles")
+    models_loaded = False
 
 # Présentation
 st.title("Bienvenue dans mon projet OCR !")
 st.write("Ce travail s'inscrit dans le cadre de ma formation en deep learning.")
 
-# Fonction reset complète
+# Fonction de réinitialisation
 def reset_app():
-    st.session_state.uploaded_file = None
-    st.session_state.uploaded_file_key += 1
-    st.session_state.image_confirmee = False
-    st.session_state.processing_done = False
+    st.session_state.reset = True
 
 # File uploader - TOUJOURS affiché
 uploaded_file = st.file_uploader(
     "Choisis une image",
-    type=["png", "jpg", "jpeg"],
-    key=f"uploader_{st.session_state.uploaded_file_key}"
+    type=["png", "jpg", "jpeg"]
 )
 
-# Si fichier sélectionné
+# Si un fichier est uploadé
 if uploaded_file is not None:
     st.session_state.uploaded_file = uploaded_file
 
-# Si un fichier est sélectionné mais pas encore confirmé
-if st.session_state.uploaded_file is not None and not st.session_state.image_confirmee:
-            image = Image.open(st.session_state.uploaded_file)
-            st.image(image, caption="Image importée", use_container_width=True)
+# Si un fichier est présent dans la session
+if st.session_state.uploaded_file is not None:
+    image = Image.open(st.session_state.uploaded_file)
+    st.image(image, caption="Image importée", use_container_width=True)
+    
+    # Demander confirmation seulement si pas déjà confirmée
+    if not st.session_state.image_confirmee:
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Oui, utiliser cette image"):
+                st.session_state.image_confirmee = True
+                st.rerun()
+        with col2:
+            if st.button("Non, choisir une autre image"):
+                st.session_state.uploaded_file = None
+                st.session_state.image_confirmee = False
+                st.rerun()
+    
+    # Si l'image est confirmée et les modèles sont chargés
+    if st.session_state.image_confirmee and models_loaded:
+        img_array = np.array(image)
+        
+        # Détection avec YOLO
+        with st.spinner("Détection des caractères..."):
+            results = yolo_model.predict(img_array)
+            im_annotated = results[0].plot()
+            st.image(im_annotated, caption="Détection YOLO", use_container_width=True)
+        
+        # Extraire les boxes
+        boxes = []
+        for i, box in enumerate(results[0].boxes):
+            conf = float(box.conf[0])
+            if conf < 0.33:
+                continue
+            x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+            boxes.append([x1, y1, x2, y2, conf])
+        
+        if not boxes:
+            st.warning("⚠️ Aucune box détectée avec assez de confiance.")
+            if st.button("Réessayer avec une autre image"):
+                reset_app()
+        else:
+            # NMS simple
+            def iou(box1, box2):
+                x1, y1, x2, y2 = box1[:4]
+                X1, Y1, X2, Y2 = box2[:4]
+                inter_x1, inter_y1 = max(x1, X1), max(y1, Y1)
+                inter_x2, inter_y2 = min(x2, X2), min(y2, Y2)
+                inter_area = max(0, inter_x2 - inter_x1) * max(0, inter_y2 - inter_y1)
+                area1 = (x2 - x1) * (y2 - y1)
+                area2 = (X2 - X1) * (Y2 - Y1)
+                union = area1 + area2 - inter_area
+                return inter_area / union if union > 0 else 0
             
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Oui, utiliser cette image"):
-                    st.session_state.image_confirmee = True
-                    st.rerun()
-            with col2:
-                if st.button("Non, choisir une autre image"):
-                    reset_app()
-                    st.rerun()
-elif st.session_state.uploaded_file is not None and st.session_state.image_confirmee and not st.session_state.processing_done:
-                st.success("Image confirmée. Traitement en cours...")
+            boxes = sorted(boxes, key=lambda b: b[4], reverse=True)
+            nms_boxes = []
+            while boxes:
+                best = boxes.pop(0)
+                nms_boxes.append(best)
+                boxes = [b for b in boxes if iou(best, b) < 0.4]
+            
+            # Trier par ligne
+            heights = [y2 - y1 for x1, y1, x2, y2, _ in nms_boxes]
+            avg_h = int(np.mean(heights)) if heights else 1
+            boxes_sorted = sorted(nms_boxes, key=lambda b: (b[1] // avg_h, b[0]))
+            
+            # OCR avec DocTR
+            recognized_text = []
+            st.subheader("Reconnaissance des caractères")
+            
+            for idx, (x1, y1, x2, y2, conf) in enumerate(boxes_sorted, start=1):
+                crop = img_array[y1:y2, x1:x2]
+                crop_pil = Image.fromarray(crop)
                 
-                image = Image.open(st.session_state.uploaded_file)
-                img_array = np.array(image)
-                # -----------------------------
-                # Étape 1 - Détection avec YOLO
-                # -----------------------------
-                results = yolo_model.predict(img_array)
-                im_annotated = results[0].plot()
-                st.image(im_annotated, caption="Détection YOLO", use_column_width=True)
-            
-                # Extraire les boxes
-                boxes = []
-                for i, box in enumerate(results[0].boxes):
-                    conf = float(box.conf[0])
-                    if conf < 0.33:
-                        continue
-                    x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                    boxes.append([x1, y1, x2, y2, conf])
-            
-                if not boxes:
-                    st.warning("⚠️ Aucune box détectée avec assez de confiance.")
+                buffer = io.BytesIO()
+                crop_pil.save(buffer, format="JPEG")
+                buffer.seek(0)
+                
+                doc = DocumentFile.from_images(buffer.getvalue())
+                
+                col1, col2 = st.columns([1, 2])
+                with col1:
+                    st.image(crop_pil, caption=f"Crop {idx}", use_container_width=True)
+                
+                img = doc[0].astype("float32") / 255.0
+                
+                h, w, _ = img.shape
+                if h != 32:
+                    new_w = int(w * 32 / h)
+                    resized = cv2.resize(img, (new_w, 32))
+                    tensor = torch.from_numpy(resized).permute(2, 0, 1).unsqueeze(0).float()
                 else:
-                    # Supprimer chevauchements (NMS simple)
-                    def iou(box1, box2):
-                        x1, y1, x2, y2 = box1[:4]
-                        X1, Y1, X2, Y2 = box2[:4]
-                        inter_x1, inter_y1 = max(x1, X1), max(y1, Y1)
-                        inter_x2, inter_y2 = min(x2, X2), min(y2, Y2)
-                        inter_area = max(0, inter_x2 - inter_x1) * max(0, inter_y2 - inter_y1)
-                        area1 = (x2 - x1) * (y2 - y1)
-                        area2 = (X2 - X1) * (Y2 - Y1)
-                        union = area1 + area2 - inter_area
-                        return inter_area / union if union > 0 else 0
+                    tensor = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0).float()
+                
+                with torch.no_grad():
+                    out = ocr_model(tensor)
+                
+                if "preds" in out:
+                    recognized_char = out["preds"][0][0]
+                else:
+                    recognized_char = "?"
+                
+                recognized_text.append(recognized_char)
+                with col2:
+                    st.write(f"**Caractère {idx}:** {recognized_char}")
+                    st.write(f"Confiance: {conf:.2f}")
             
-                    boxes = sorted(boxes, key=lambda b: b[4], reverse=True)
-                    nms_boxes = []
-                    while boxes:
-                        best = boxes.pop(0)
-                        nms_boxes.append(best)
-                        boxes = [b for b in boxes if iou(best, b) < 0.4]
+            # Afficher texte final
+            st.subheader("📝 Texte Reconnu")
+            final_text = " ".join(recognized_text)
+            st.success(final_text)
             
-                    # Trier par ligne (y puis x)
-                    heights = [y2 - y1 for x1, y1, x2, y2, _ in nms_boxes]
-                    avg_h = int(np.mean(heights))
-                    boxes_sorted = sorted(nms_boxes, key=lambda b: (b[1] // avg_h, b[0]))
+            st.download_button(
+                "📥 Télécharger le texte",
+                data=final_text,
+                file_name="ocr_result.txt",
+                mime="text/plain",
+            )
             
-                    # -----------------------------
-                    # Étape 2 - OCR avec DocTR
-                    # -----------------------------
-                    recognized_text = []
-                    for idx, (x1, y1, x2, y2, conf) in enumerate(boxes_sorted, start=1):
-                        # ton crop numpy
-                        crop = img_array[y1:y2, x1:x2]
-                        
-                        # conversion en image PIL
-                        crop_pil = Image.fromarray(crop)
-                        
-                        # sauvegarde en mémoire (buffer) au format JPEG
-                        buffer = io.BytesIO()
-                        crop_pil.save(buffer, format="JPEG")
-                        buffer.seek(0)  # remettre le curseur au début du buffer
-                        
-                        # utiliser dans doctr
-                        doc = DocumentFile.from_images(buffer.getvalue())
-                        
-                        # afficher dans Streamlit
-                        st.image(crop_pil, caption="Aperçu du crop", use_container_width=True)
-            
-                        
-                        img = doc[0].astype("float32") / 255.0
-            
-                        h, w, _ = img.shape
-                        if h != 32:
-                            new_w = int(w * 32 / h)
-                            resized = cv2.resize(img, (new_w, 32))
-                            tensor = torch.from_numpy(resized).permute(2, 0, 1).unsqueeze(0).float()
-                        else:
-                            tensor = torch.from_numpy(img).permute(2, 0, 1).unsqueeze(0).float()
-            
-                        with torch.no_grad():
-                            out = ocr_model(tensor)
-            
-                        # Récupération du caractère prédit
-                        if "preds" in out:
-                            recognized_char = out["preds"][0][0]
-                        else:
-                            recognized_char = "?"
-            
-                        recognized_text.append(recognized_char)
-                        st.image(crop, caption=f"Caractère {idx}: {recognized_char}", width=80)
-            
-                    # -----------------------------
-                    # Étape 3 - Afficher texte final
-                    # -----------------------------
-                    st.subheader("📝 Texte Reconnu")
-                    final_text = " ".join(recognized_text)
-                    st.write(final_text)
-            
-                    # Option téléchargement
-                    st.download_button(
-                        "📥 Télécharger le texte",
-                        data=final_text,
-                        file_name="ocr_result.txt",
-                        mime="text/plain",
-                    )
-
-                if st.button("🔄 Analyser une nouvelle image"):
-                       reset_app()
-
-
-
+            if st.button("🔄 Analyser une nouvelle image"):
+                reset_app()
