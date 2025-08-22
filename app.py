@@ -174,13 +174,6 @@ elif st.session_state.uploaded_file is not None and st.session_state.image_confi
 
                 if st.button("🔄 Analyser une nouvelle image"):
                        reset_app()
-                
-else:
-    st.error("Les modèles n'ont pas pu être chargés. Veuillez vérifier les fichiers de modèle.")
-    
-    if st.button("Réessayer le chargement des modèles"):
-        # Nettoyer le cache pour forcer le rechargement
-        st.cache_resource.clear()
-        st.rerun()
+
 
 
