@@ -63,13 +63,12 @@ if st.session_state.uploaded_file is not None and not st.session_state.image_con
             with col2:
                 if st.button("Non, choisir une autre image"):
                     reset_app()
-        
-        # Si l'image est confirmée, procéder au traitement
-        if st.session_state.image_confirmee:
+                    st.rerun()
+elif st.session_state.uploaded_file is not None and st.session_state.image_confirmee and not st.session_state.processing_done:
                 st.success("Image confirmée. Traitement en cours...")
-                    
+                
+                image = Image.open(st.session_state.uploaded_file)
                 img_array = np.array(image)
-            
                 # -----------------------------
                 # Étape 1 - Détection avec YOLO
                 # -----------------------------
