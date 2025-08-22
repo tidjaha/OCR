@@ -16,6 +16,11 @@ ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 #petite presentation
 st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
 
+uploaded_file = st.file_uploader(
+    "Choisis une image à analyser",
+    type=["png", "jpg", "jpeg"],
+    key=f"uploader_{st.session_state.uploader_key}"
+)
 
 
 
@@ -38,15 +43,12 @@ def reset_app():
     placeholder.empty()
     uploaded_file=None
 
+
+
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     with placeholder.container():
-        uploaded_file = st.file_uploader(
-    "Choisis une image à analyser",
-    type=["png", "jpg", "jpeg"],
-    key=f"uploader_{st.session_state.uploader_key}"
-)
-
+        
         st.image(image, caption="Image importée", use_column_width=True)
         col1, col2 = st.columns(2)
         with col1:
