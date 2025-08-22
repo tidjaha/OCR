@@ -11,6 +11,9 @@ from doctr.models import recognition
 # Configuration de la page
 st.set_page_config(page_title="OCR App", layout="wide")
 
+# Configuration de la page
+st.set_page_config(page_title="OCR App", layout="wide")
+
 # Initialisation de l'état de session
 if "uploaded_file_key" not in st.session_state:
     st.session_state.uploaded_file_key = 0
@@ -21,46 +24,37 @@ if "image_confirmee" not in st.session_state:
 if "processing_done" not in st.session_state:
     st.session_state.processing_done = False
 
-
-#chargement des modeles :
-yolo_model = YOLO("best.pt")  # ton modèle YOLO entraîné
+# Chargement des modèles
+yolo_model = YOLO("best.pt")
 ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 
-#petite presentation
+# Présentation
 st.title("Bienvenue dans mon projet OCR !")
-st.write("Ce travail s’inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
+st.write("Ce travail s'inscrit dans le cadre de ma formation en deep learning.")
 
-
+# Fonction reset complète
 def reset_app():
-    # Réinitialiser tous les états
     st.session_state.uploaded_file = None
     st.session_state.uploaded_file_key += 1
     st.session_state.image_confirmee = False
     st.session_state.processing_done = False
-    # Forcer le rerun pour rafraîchir l'interface
-    st.rerun()
 
-# File uploader toujours en haut
+# File uploader - TOUJOURS affiché
 uploaded_file = st.file_uploader(
     "Choisis une image",
     type=["png", "jpg", "jpeg"],
     key=f"uploader_{st.session_state.uploaded_file_key}"
 )
 
-# Si fichier sélectionné, le stocker dans session_state
-if uploaded_file is not None and not st.session_state.image_confirmee:
+# Si fichier sélectionné
+if uploaded_file is not None:
     st.session_state.uploaded_file = uploaded_file
 
-# Afficher l'interface principale seulement si les modèles sont chargés
-if yolo_model is not None and ocr_model is not None:
-    # Bloc principal
-    if st.session_state.uploaded_file is not None:
-        # Charger l'image
-        image = Image.open(st.session_state.uploaded_file)
-        st.image(image, caption="Image importée", use_container_width=True)
-        
-        # Si l'image n'a pas encore été confirmée
-        if not st.session_state.image_confirmee:
+# Si un fichier est sélectionné mais pas encore confirmé
+if st.session_state.uploaded_file is not None and not st.session_state.image_confirmee:
+            image = Image.open(st.session_state.uploaded_file)
+            st.image(image, caption="Image importée", use_container_width=True)
+            
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Oui, utiliser cette image"):
