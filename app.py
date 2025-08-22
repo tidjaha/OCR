@@ -16,52 +16,45 @@ ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 #petite presentation
 st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
 
+# Initialiser session_state
+if "image_confirmee" not in st.session_state:
+    st.session_state.image_confirmee = False
+if "uploaded_file_key" not in st.session_state:
+    st.session_state.uploaded_file_key = 0
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
+
+# Fonction pour réinitialiser
+def reset_app():
+    st.session_state.image_confirmee = False
+    st.session_state.uploaded_file = None
+    st.session_state.uploaded_file_key += 1
+    placeholder.empty()
+
+# File uploader hors du placeholder
 uploaded_file = st.file_uploader(
     "Choisis une image à analyser",
     type=["png", "jpg", "jpeg"],
-    key=f"uploader_{st.session_state.uploader_key}"
+    key=f"uploader_{st.session_state.uploaded_file_key}"
 )
 
+if uploaded_file is not None:
+    st.session_state.uploaded_file = uploaded_file
 
-
-# Zone vide pour tout le bloc upload + confirmation
-#placeholder = st.empty()
-
-if "image_confirmee" not in st.session_state:
-    st.session_state.image_confirmee = False
-if "uploader_key" not in st.session_state:
-    st.session_state.uploader_key = 0
-
-# File uploader toujours en dehors du placeholder
-
-# Placeholder pour tout le bloc de traitement
+# Placeholder pour tout le bloc traitement + confirmation
 placeholder = st.empty()
 
-def reset_app():
-    st.session_state.image_confirmee = False
-    st.session_state.uploader_key += 1  # recrée le uploader
-    placeholder.empty()
-    uploaded_file=None
-
-
-with placeholder.container():
-  if uploaded_file is None:
-    uploaded_file = st.file_uploader(
-    "Choisis une image à analyser",
-    type=["png", "jpg", "jpeg"],
-    key=f"uploader_{st.session_state.uploader_key}"
-) 
-    image = Image.open(uploaded_file)
-  else: 
-    image = Image.open(uploaded_file)
-    
-        
-  st.image(image, caption="Image importée", use_column_width=True)
-  col1, col2 = st.columns(2)
-  with col1:
+if st.session_state.uploaded_file is not None:
+    image = Image.open(st.session_state.uploaded_file)
+    with placeholder.container():
+        st.image(image, caption="Image importée", use_column_width=True)
+        st.write("C'est bien votre image ?")
+        col1, col2 = st.columns(2)
+        with col1:
             if st.button("Oui"):
                 st.session_state.image_confirmee = True
                 st.success("Vous avez confirmé. On continue !")
+
                 img_array = np.array(image)
             
                 # -----------------------------
