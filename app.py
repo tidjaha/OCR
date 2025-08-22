@@ -57,7 +57,7 @@ if yolo_model is not None and ocr_model is not None:
     if st.session_state.uploaded_file is not None and not st.session_state.processing_done:
         # Charger l'image
         image = Image.open(st.session_state.uploaded_file)
-        st.image(image, caption="Image importée", use_column_width=True)
+        st.image(image, caption="Image importée", use_container_width=True)
         
         # Si l'image n'a pas encore été confirmée
         if not st.session_state.image_confirmee:
