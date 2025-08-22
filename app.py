@@ -26,7 +26,7 @@ yolo_model = YOLO("best.pt")  # ton modèle YOLO entraîné
 ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 
 
-
+st.title("Chargement du fichier….")
 uploaded_file = st.file_uploader("Choisis une image à analyser (extraire les mots)", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
