@@ -54,7 +54,7 @@ if uploaded_file is not None and not st.session_state.image_confirmee:
 # Afficher l'interface principale seulement si les modèles sont chargés
 if yolo_model is not None and ocr_model is not None:
     # Bloc principal
-    if st.session_state.uploaded_file is not None and not st.session_state.processing_done:
+    if st.session_state.uploaded_file is not None:
         # Charger l'image
         image = Image.open(st.session_state.uploaded_file)
         st.image(image, caption="Image importée", use_container_width=True)
