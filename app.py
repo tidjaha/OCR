@@ -13,11 +13,11 @@ st.title("Bienvenue dans mon projet O.C.R")
 st.write("Ce projet a été réalisé dans le cadre de ma formation en Deep Learning et IA.")
 
 st.title("Vidéo : Comment utiliser ce site")
-#st.video("")
+st.video("https://youtu.be/tKCzCrkkuIg")
 
 
 st.title("Comment ça marche")
-#st.video("")
+st.video("https://youtu.be/5FU7u_J3XUM")
 
 # -----------------------------
 # Charger modèles
