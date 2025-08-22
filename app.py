@@ -25,18 +25,22 @@ if "uploaded_file" not in st.session_state:
 def reset_app():
     st.session_state.uploaded_file = None
     st.session_state.uploaded_file_key += 1
-    st.experimental_rerun()
+    st.experimental_rerun()  # force la page à se relancer
 
-# File uploader
+# File uploader **toujours en haut**, sans condition
 uploaded_file = st.file_uploader(
     "Choisis une image",
-    type=["png","jpg","jpeg"],
+    type=["png", "jpg", "jpeg"],
     key=f"uploader_{st.session_state.uploaded_file_key}"
 )
 
+# Si fichier sélectionné, le stocker dans session_state
 if uploaded_file is not None:
-        st.session_state.uploaded_file = uploaded_file
-        st.image(uploaded_file, caption="Image importée", use_column_width=True)
+    st.session_state.uploaded_file = uploaded_file
+
+# Bloc principal
+if st.session_state.uploaded_file is not None:
+        st.image(st.session_state.uploaded_file, caption="Image importée", use_column_width=True)
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Oui"):
