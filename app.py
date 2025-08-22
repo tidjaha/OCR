@@ -8,14 +8,18 @@ from ultralytics import YOLO
 from doctr.io import DocumentFile
 from doctr.models import recognition
 
+# Configuration de la page
+st.set_page_config(page_title="OCR App", layout="wide")
 
+# Initialisation de l'état de session
 if "uploaded_file_key" not in st.session_state:
     st.session_state.uploaded_file_key = 0
 if "uploaded_file" not in st.session_state:
     st.session_state.uploaded_file = None
 if "image_confirmee" not in st.session_state:
     st.session_state.image_confirmee = False
-
+if "processing_done" not in st.session_state:
+    st.session_state.processing_done = False
 
 
 #chargement des modeles :
@@ -28,42 +32,48 @@ st.write("Ce travail s’inscrit dans le cadre de ma formation en deep learning,
 
 
 def reset_app():
+    # Réinitialiser tous les états
     st.session_state.uploaded_file = None
     st.session_state.uploaded_file_key += 1
     st.session_state.image_confirmee = False
-    st.experimental_rerun()
+    st.session_state.processing_done = False
+    # Forcer le rerun pour rafraîchir l'interface
+    st.rerun()
 
-
+# File uploader toujours en haut
 uploaded_file = st.file_uploader(
     "Choisis une image",
     type=["png", "jpg", "jpeg"],
     key=f"uploader_{st.session_state.uploaded_file_key}"
 )
 
-if uploaded_file is not None:
+# Si fichier sélectionné, le stocker dans session_state
+if uploaded_file is not None and not st.session_state.image_confirmee:
     st.session_state.uploaded_file = uploaded_file
 
-# Bloc principal
-if st.session_state.uploaded_file is not None:
-    # Charger l'image
-    image = Image.open(st.session_state.uploaded_file)
-    st.image(image, caption="Image importée", use_column_width=True)
-    
-    # Si l'image n'a pas encore été confirmée
-    if not st.session_state.image_confirmee:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Oui, utiliser cette image"):
-                st.session_state.image_confirmee = True
-                st.experimental_rerun()
-        with col2:
-            if st.button("Non, choisir une autre image"):
-                reset_app()
-    
-    # Si l'image est confirmée, procéder au traitement
-    if st.session_state.image_confirmee:
-                st.success("Image confirmée. Traitement en cours...")
+# Afficher l'interface principale seulement si les modèles sont chargés
+if yolo_model is not None and ocr_model is not None:
+    # Bloc principal
+    if st.session_state.uploaded_file is not None and not st.session_state.processing_done:
+        # Charger l'image
+        image = Image.open(st.session_state.uploaded_file)
+        st.image(image, caption="Image importée", use_column_width=True)
         
+        # Si l'image n'a pas encore été confirmée
+        if not st.session_state.image_confirmee:
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Oui, utiliser cette image"):
+                    st.session_state.image_confirmee = True
+                    st.rerun()
+            with col2:
+                if st.button("Non, choisir une autre image"):
+                    reset_app()
+        
+        # Si l'image est confirmée, procéder au traitement
+        if st.session_state.image_confirmee:
+                st.success("Image confirmée. Traitement en cours...")
+                    
                 img_array = np.array(image)
             
                 # -----------------------------
@@ -172,6 +182,12 @@ if st.session_state.uploaded_file is not None:
                 if st.button("🔄 Analyser une nouvelle image"):
                        reset_app()
                 
-
+else:
+    st.error("Les modèles n'ont pas pu être chargés. Veuillez vérifier les fichiers de modèle.")
+    
+    if st.button("Réessayer le chargement des modèles"):
+        # Nettoyer le cache pour forcer le rechargement
+        st.cache_resource.clear()
+        st.rerun()
 
 
