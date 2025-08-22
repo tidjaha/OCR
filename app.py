@@ -127,5 +127,5 @@ if uploaded_file is not None:
             mime="text/plain",
         )
 
-st.markdown("© Tidjaha 2025. Copyrights.")
+st.markdown("© tidjaha 2025. Copyrights.")
 st.markdown("[Cliquez ici pour consulter mon CV](https://tidjaha.github.io/mon-CV/)")
