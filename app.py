@@ -36,6 +36,7 @@ def reset_app():
     st.session_state.image_confirmee = False
     st.session_state.uploader_key += 1  # recrée le uploader
     placeholder.empty()
+    uploaded_file=None
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
