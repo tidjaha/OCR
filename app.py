@@ -30,25 +30,15 @@ except Exception as e:
     st.error(f"Erreur lors du chargement des modèles: {str(e)}")
     models_loaded = False
 
-# Fonction de réinitialisation
-def reset_app():
-    st.session_state.uploaded_file = None
-    st.session_state.image_confirmed = False
+# File uploader - Toujours affiché
+uploaded_file = st.file_uploader("Choisis une image", type=["png", "jpg", "jpeg"], key="unique_uploader_key")
 
-It looks like the uploader is missing after a page reload due to how Streamlit handles session state and reruns. The issue likely stems from the `st.rerun()` call in the `reset_app()` function, which resets the session state including the `uploaded_file`. To fix this, you should avoid resetting the entire session state when switching images and instead update the `uploaded_file` directly when a new file is uploaded.
-
-Here’s a suggestion: Move the file uploader logic outside the conditional block and update the session state only when a new file is selected. Modify your code like this:
-
-```python
-# File uploader - Always displayed at the top
-uploaded_file = st.file_uploader("Choisis une image", type=["png", "jpg", "jpeg"], key="file_uploader")
-
-# Update session state only if a new file is uploaded
-if uploaded_file is not None and uploaded_file != st.session_state.get('uploaded_file'):
+# Mettre à jour l'état de session uniquement si un nouveau fichier est uploadé
+if uploaded_file is not None and (st.session_state.uploaded_file is None or uploaded_file != st.session_state.uploaded_file):
     st.session_state.uploaded_file = uploaded_file
     st.session_state.image_confirmed = False
 
-# Rest of your code...
+# Si un fichier est présent
 if st.session_state.uploaded_file is not None:
     image = Image.open(st.session_state.uploaded_file)
     st.image(image, caption="Image importée", use_column_width=True)
@@ -58,12 +48,12 @@ if st.session_state.uploaded_file is not None:
         with col1:
             if st.button("Oui, utiliser cette image"):
                 st.session_state.image_confirmed = True
+                st.rerun()
         with col2:
             if st.button("Non, choisir une autre image"):
                 st.session_state.uploaded_file = None
                 st.session_state.image_confirmed = False
                 st.rerun()
-   
     
     # Si l'image est confirmée et les modèles sont chargés
     if st.session_state.image_confirmed and models_loaded:
@@ -73,9 +63,9 @@ if st.session_state.uploaded_file is not None:
         with st.spinner("Détection des caractères en cours..."):
             results = yolo_model.predict(img_array)
             im_annotated = results[0].plot()
-            st.image(im_annotated, caption="Détection YOLO", use_container_width=True)
+            st.image(im_annotated, caption="Détection YOLO", use_column_width=True)
         
-        # Extraire les boxes
+        # Extraire les boxes (reste du code inchangé)
         boxes = []
         for i, box in enumerate(results[0].boxes):
             conf = float(box.conf[0])
@@ -87,7 +77,7 @@ if st.session_state.uploaded_file is not None:
         if not boxes:
             st.warning("⚠️ Aucune box détectée avec assez de confiance.")
         else:
-            # NMS simple
+            # NMS simple (reste du code inchangé)
             def iou(box1, box2):
                 x1, y1, x2, y2 = box1[:4]
                 X1, Y1, X2, Y2 = box2[:4]
@@ -127,7 +117,7 @@ if st.session_state.uploaded_file is not None:
                 
                 col1, col2 = st.columns([1, 2])
                 with col1:
-                    st.image(crop_pil, caption=f"Crop {idx}", use_container_width=True)
+                    st.image(crop_pil, caption=f"Crop {idx}", use_column_width=True)
                 
                 img = doc[0].astype("float32") / 255.0
                 
@@ -165,9 +155,9 @@ if st.session_state.uploaded_file is not None:
             )
             
             if st.button("🔄 Analyser une nouvelle image"):
-                reset_app()
+                st.session_state.uploaded_file = None
+                st.session_state.image_confirmed = False
                 st.rerun()
 
-# Si les modèles ne sont pas chargés
 elif not models_loaded:
     st.error("Les modèles ne sont pas chargés correctement. Impossible de continuer.")
