@@ -8,15 +8,24 @@ from ultralytics import YOLO
 from doctr.io import DocumentFile
 from doctr.models import recognition
 
+st.title("Bienvenue dans mon projet O.C.R")
+
+st.write("Ce projet a été réalisé dans le cadre de ma formation en Deep Learning et IA.")
+
+st.title("Vidéo : Comment utiliser ce site")
+st.video("")
+
+
+st.title("Comment ça marche")
+st.video("")
+
 # -----------------------------
 # Charger modèles
 # -----------------------------
 yolo_model = YOLO("best.pt")  # ton modèle YOLO entraîné
 ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 
-st.title("Bienvenue dans mon projet O.C.R")
 
-st.write("Ce projet a été réalisé dans le cadre de ma formation en Deep Learning et IA.")
 
 uploaded_file = st.file_uploader("Choisis une image à analyser (extraire les mots)", type=["jpg", "jpeg", "png"])
 
