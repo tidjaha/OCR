@@ -35,19 +35,24 @@ def reset_app():
     st.session_state.uploaded_file = None
     st.session_state.image_confirmed = False
 
-# File uploader - TOUJOURS affiché
-uploaded_file = st.file_uploader("Choisis une image", type=["png", "jpg", "jpeg"])
+It looks like the uploader is missing after a page reload due to how Streamlit handles session state and reruns. The issue likely stems from the `st.rerun()` call in the `reset_app()` function, which resets the session state including the `uploaded_file`. To fix this, you should avoid resetting the entire session state when switching images and instead update the `uploaded_file` directly when a new file is uploaded.
 
-# Si un fichier est uploadé
-if uploaded_file is not None:
+Here’s a suggestion: Move the file uploader logic outside the conditional block and update the session state only when a new file is selected. Modify your code like this:
+
+```python
+# File uploader - Always displayed at the top
+uploaded_file = st.file_uploader("Choisis une image", type=["png", "jpg", "jpeg"], key="file_uploader")
+
+# Update session state only if a new file is uploaded
+if uploaded_file is not None and uploaded_file != st.session_state.get('uploaded_file'):
     st.session_state.uploaded_file = uploaded_file
+    st.session_state.image_confirmed = False
 
-# Si un fichier est présent
+# Rest of your code...
 if st.session_state.uploaded_file is not None:
     image = Image.open(st.session_state.uploaded_file)
-    st.image(image, caption="Image importée", use_container_width=True)
+    st.image(image, caption="Image importée", use_column_width=True)
     
-    # Demander confirmation seulement si pas déjà confirmée
     if not st.session_state.image_confirmed:
         col1, col2 = st.columns(2)
         with col1:
@@ -55,8 +60,10 @@ if st.session_state.uploaded_file is not None:
                 st.session_state.image_confirmed = True
         with col2:
             if st.button("Non, choisir une autre image"):
-                reset_app()
+                st.session_state.uploaded_file = None
+                st.session_state.image_confirmed = False
                 st.rerun()
+   
     
     # Si l'image est confirmée et les modèles sont chargés
     if st.session_state.image_confirmed and models_loaded:
