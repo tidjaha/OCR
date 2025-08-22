@@ -9,44 +9,61 @@ from doctr.io import DocumentFile
 from doctr.models import recognition
 
 
+if "uploaded_file_key" not in st.session_state:
+    st.session_state.uploaded_file_key = 0
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
+if "image_confirmee" not in st.session_state:
+    st.session_state.image_confirmee = False
+
+
+
 #chargement des modeles :
 yolo_model = YOLO("best.pt")  # ton modèle YOLO entraîné
 ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 
 #petite presentation
-st.title("Bienvenue dans mon projet OCR ! Ce travail s’inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
+st.title("Bienvenue dans mon projet OCR !")
+st.write("Ce travail s’inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
 
-if "uploaded_file_key" not in st.session_state:
-    st.session_state.uploaded_file_key = 0
-if "uploaded_file" not in st.session_state:
-    st.session_state.uploaded_file = None
 
-# Fonction reset
 def reset_app():
     st.session_state.uploaded_file = None
     st.session_state.uploaded_file_key += 1
-    st.experimental_rerun()  # force la page à se relancer
+    st.session_state.image_confirmee = False
+    st.experimental_rerun()
 
-# File uploader **toujours en haut**, sans condition
+
 uploaded_file = st.file_uploader(
     "Choisis une image",
     type=["png", "jpg", "jpeg"],
     key=f"uploader_{st.session_state.uploaded_file_key}"
 )
 
-# Si fichier sélectionné, le stocker dans session_state
 if uploaded_file is not None:
     st.session_state.uploaded_file = uploaded_file
 
 # Bloc principal
 if st.session_state.uploaded_file is not None:
-        st.image(st.session_state.uploaded_file, caption="Image importée", use_column_width=True)
+    # Charger l'image
+    image = Image.open(st.session_state.uploaded_file)
+    st.image(image, caption="Image importée", use_column_width=True)
+    
+    # Si l'image n'a pas encore été confirmée
+    if not st.session_state.image_confirmee:
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Oui"):
+            if st.button("Oui, utiliser cette image"):
                 st.session_state.image_confirmee = True
-                st.success("Vous avez confirmé. On continue !")
-
+                st.experimental_rerun()
+        with col2:
+            if st.button("Non, choisir une autre image"):
+                reset_app()
+    
+    # Si l'image est confirmée, procéder au traitement
+    if st.session_state.image_confirmee:
+                st.success("Image confirmée. Traitement en cours...")
+        
                 img_array = np.array(image)
             
                 # -----------------------------
@@ -151,9 +168,9 @@ if st.session_state.uploaded_file is not None:
                         file_name="ocr_result.txt",
                         mime="text/plain",
                     )
-        with col2:
-            if st.button("Non"):
-                reset_app()
+
+                if st.button("🔄 Analyser une nouvelle image"):
+                       reset_app()
                 
 
 
