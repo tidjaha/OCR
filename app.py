@@ -11,73 +11,56 @@ from doctr.models import recognition
 # Configuration de la page
 st.set_page_config(page_title="OCR App", layout="wide")
 
-# Réinitialisation complète si nécessaire
-if "reset" not in st.session_state:
-    st.session_state.reset = False
+# Titre et introduction
+st.title("Bienvenue dans mon projet OCR !")
+st.write("Ce travail s'inscrit dans le cadre de ma formation en deep learning, qui est encore en cours et devrait se terminer dans environ un mois.")
 
-if st.session_state.reset:
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.session_state.reset = False
-    st.rerun()
-
-# Initialisation des états de base
-if "uploaded_file" not in st.session_state:
-    st.session_state.uploaded_file = None
-if "image_confirmee" not in st.session_state:
-    st.session_state.image_confirmee = False
+# Initialisation de l'état
+if 'file_uploaded' not in st.session_state:
+    st.session_state.file_uploaded = False
+if 'image_confirmed' not in st.session_state:
+    st.session_state.image_confirmed = False
+if 'processing_done' not in st.session_state:
+    st.session_state.processing_done = False
 
 # Chargement des modèles
 try:
     yolo_model = YOLO("best.pt")
     ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
     models_loaded = True
-except:
-    st.error("Erreur lors du chargement des modèles")
+except Exception as e:
+    st.error(f"Erreur lors du chargement des modèles: {str(e)}")
     models_loaded = False
 
-# Présentation
-st.title("Bienvenue dans mon projet OCR !")
-st.write("Ce travail s'inscrit dans le cadre de ma formation en deep learning.")
+# Étape 1: Upload de l'image
+uploaded_file = st.file_uploader("Choisis une image", type=["png", "jpg", "jpeg"])
 
-# Fonction de réinitialisation
-def reset_app():
-    st.session_state.reset = True
-
-# File uploader - TOUJOURS affiché
-uploaded_file = st.file_uploader(
-    "Choisis une image",
-    type=["png", "jpg", "jpeg"]
-)
-
-# Si un fichier est uploadé
 if uploaded_file is not None:
-    st.session_state.uploaded_file = uploaded_file
-
-# Si un fichier est présent dans la session
-if st.session_state.uploaded_file is not None:
-    image = Image.open(st.session_state.uploaded_file)
+    st.session_state.file_uploaded = True
+    image = Image.open(uploaded_file)
     st.image(image, caption="Image importée", use_container_width=True)
     
-    # Demander confirmation seulement si pas déjà confirmée
-    if not st.session_state.image_confirmee:
+    # Étape 2: Confirmation de l'image
+    if not st.session_state.image_confirmed:
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Oui, utiliser cette image"):
-                st.session_state.image_confirmee = True
+                st.session_state.image_confirmed = True
+                st.session_state.uploaded_image = image
                 st.rerun()
         with col2:
             if st.button("Non, choisir une autre image"):
-                st.session_state.uploaded_file = None
-                st.session_state.image_confirmee = False
+                st.session_state.file_uploaded = False
+                st.session_state.image_confirmed = False
                 st.rerun()
-    
-    # Si l'image est confirmée et les modèles sont chargés
-    if st.session_state.image_confirmee and models_loaded:
-        img_array = np.array(image)
+
+# Étape 3: Traitement de l'image
+if st.session_state.file_uploaded and st.session_state.image_confirmed and not st.session_state.processing_done:
+    if models_loaded:
+        img_array = np.array(st.session_state.uploaded_image)
         
         # Détection avec YOLO
-        with st.spinner("Détection des caractères..."):
+        with st.spinner("Détection des caractères en cours..."):
             results = yolo_model.predict(img_array)
             im_annotated = results[0].plot()
             st.image(im_annotated, caption="Détection YOLO", use_container_width=True)
@@ -94,7 +77,10 @@ if st.session_state.uploaded_file is not None:
         if not boxes:
             st.warning("⚠️ Aucune box détectée avec assez de confiance.")
             if st.button("Réessayer avec une autre image"):
-                reset_app()
+                st.session_state.file_uploaded = False
+                st.session_state.image_confirmed = False
+                st.session_state.processing_done = False
+                st.rerun()
         else:
             # NMS simple
             def iou(box1, box2):
@@ -173,5 +159,12 @@ if st.session_state.uploaded_file is not None:
                 mime="text/plain",
             )
             
+            st.session_state.processing_done = True
+            
             if st.button("🔄 Analyser une nouvelle image"):
-                reset_app()
+                st.session_state.file_uploaded = False
+                st.session_state.image_confirmed = False
+                st.session_state.processing_done = False
+                st.rerun()
+    else:
+        st.error("Les modèles ne sont pas chargés correctement.")
