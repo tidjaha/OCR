@@ -14,9 +14,11 @@ from doctr.models import recognition
 yolo_model = YOLO("best.pt")  # ton modèle YOLO entraîné
 ocr_model = recognition.crnn_vgg16_bn(pretrained=True).eval()
 
-st.title("📖 OCR Custom - YOLO + DocTR")
+st.title("Bienvenue dans mon projet O.C.R")
 
-uploaded_file = st.file_uploader("Choisis une image à analyser", type=["jpg", "jpeg", "png"])
+st.write("Ce projet a été réalisé dans le cadre de ma formation en Deep Learning et IA.")
+
+uploaded_file = st.file_uploader("Choisis une image à analyser (extraire les mots)", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     # Charger l’image
@@ -29,7 +31,7 @@ if uploaded_file is not None:
     # -----------------------------
     results = yolo_model.predict(img_array)
     im_annotated = results[0].plot()
-    st.image(im_annotated, caption="Détection YOLO", use_column_width=True)
+    st.image(im_annotated, caption="Détection YOLO")
 
     # Extraire les boxes
     boxes = []
@@ -81,7 +83,7 @@ if uploaded_file is not None:
             buffer.seek(0)
 
             doc = DocumentFile.from_images(buffer.getvalue())
-            st.image(crop_pil, caption="Aperçu du crop", use_container_width=True)
+            st.image(crop_pil, caption="Aperçu du crop")
 
             img = doc[0].astype("float32") / 255.0
             h, w, _ = img.shape
@@ -110,7 +112,7 @@ if uploaded_file is not None:
         st.write(final_text)
 
         st.download_button(
-            "📥 Télécharger le texte",
+            "📥 Télécharger les Mots",
             data=final_text,
             file_name="ocr_result.txt",
             mime="text/plain",
