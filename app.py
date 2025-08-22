@@ -44,14 +44,21 @@ def reset_app():
     uploaded_file=None
 
 
-
-if uploaded_file is not None:
+with placeholder.container():
+  if uploaded_file is None:
+    uploaded_file = st.file_uploader(
+    "Choisis une image à analyser",
+    type=["png", "jpg", "jpeg"],
+    key=f"uploader_{st.session_state.uploader_key}"
+) 
     image = Image.open(uploaded_file)
-    with placeholder.container():
+  else: 
+    image = Image.open(uploaded_file)
+    
         
-        st.image(image, caption="Image importée", use_column_width=True)
-        col1, col2 = st.columns(2)
-        with col1:
+  st.image(image, caption="Image importée", use_column_width=True)
+  col1, col2 = st.columns(2)
+  with col1:
             if st.button("Oui"):
                 st.session_state.image_confirmee = True
                 st.success("Vous avez confirmé. On continue !")
