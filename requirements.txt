@@ -3,7 +3,6 @@ torch
 torchvision
 ultralytics
 python-doctr
-opencv-python-headless==4.10.0.84
+opencv-python-headless
 numpy
 Pillow
-libgl1
