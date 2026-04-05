@@ -8,4 +8,3 @@ Pillow
 opencv-python-headless==4.8.1.78
 numpy
 Pillow
-python_version < "3.12"
