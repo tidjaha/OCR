@@ -4,7 +4,5 @@ torchvision
 ultralytics
 python-doctr
 numpy==1.26.4
-Pillow
-opencv-python==4.10.0.84
-numpy
-Pillow
+Pillow==10.4.0
+opencv-python-headless==4.9.0.80
