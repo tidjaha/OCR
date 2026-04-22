@@ -3,8 +3,8 @@ torch
 torchvision
 ultralytics
 python-doctr
-numpy
+numpy==1.26.4
 Pillow
-opencv-python-headless==4.8.1.78
+opencv-python==4.10.0.84
 numpy
 Pillow
